@@ -34,7 +34,7 @@
 
 ## ✨ Por qué existe esto
 
-WeyToken (微元算力) es un panel de New API cuyo formulario de registro **no tiene captcha** (`turnstile_check: false`) — correo electrónico + código de 6 caracteres es todo el filtro, y la cuenta recién creada llega con aproximadamente **1,5M de unidades de cuota** (saldo medido tras la primera llamada: 1.499.887; `quota_per_unit` 500.000). La hoja de precios contiene **63 filas**, incluidos modelos multimedia con ratio cero (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth se ofrece como puerta alternativa, y el valor predeterminado verificado por chat es `deepseek-v4.1-flash`.
+WeyToken (微元算力) es un panel de New API cuyo formulario de registro está **libre de captcha** (`turnstile_check: false`) — correo electrónico + código de 6 caracteres es toda la barrera, y la cuenta nueva llega con aproximadamente **1,5M de unidades de cuota** (saldo medido tras la primera llamada: 1.499.887; `quota_per_unit` 500.000). La hoja de precios contiene **63 filas**, incluidos modelos multimedia con ratio cero (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth se ofrece como puerta alternativa, y el predeterminado verificado por chat es `deepseek-v4.1-flash`.
 
 ## 🎁 Nivel gratuito — cuánto obtienes
 
@@ -47,7 +47,7 @@ WeyToken (微元算力) es un panel de New API cuyo formulario de registro **no 
 | Línea v4.1 | `deepseek-v4.1-flash` ratio 0.85, grupo `default` |
 | Riel de correo | Las direcciones entrantes de Mailtrap funcionaron en el carril; los buzones de intermediarios también pasan |
 
-> 💡 El nivel gratuito lo define WeyToken y puede cambiar. Consulta los números en vivo en [api.weytoken.com](https://api.weytoken.com) — y deja que la propia verificación de la herramienta decida:
+> 💡 El nivel gratuito lo define WeyToken y puede cambiar. Consulta los números en vivo en [api.weytoken.com](https://api.weytoken.com) — y deja que la propia puerta de la herramienta decida:
 
 ```bash
 node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
@@ -55,13 +55,13 @@ node src/cli.js --verify-only     # every key in keys.txt is re-tested with a re
 
 ## 🤖 Modelos — los 63
 
-La hoja de precios contiene **63 filas**. El valor predeterminado verificado por chat:
+La hoja de precios contiene **63 filas**. El predeterminado verificado por chat:
 
 | ID del modelo | Nota |
 | --- | --- |
-| `deepseek-v4.1-flash` | **200** con contenido real en `default`; delta de cuota ~113 por llamada mínima |
+| `deepseek-v4.1-flash` | **200** con contenido real en `default`; delta de cuota ~113 por llamada pequeña |
 
-Filas multimedia con ratio cero (gratis con ratio 0, imagen/vídeo): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
+Filas multimedia con ratio cero (gratis a ratio 0, imagen/vídeo): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
 
 ```bash
 curl https://api.weytoken.com/v1/chat/completions \
@@ -89,11 +89,11 @@ node src/launcher.js
 # or: node src/cli.js --count 30
 ```
 
-`keys.txt` se escribe solo después de una finalización de chat en vivo; `accounts.json` conserva el nombre de usuario / correo electrónico / id de la clave.
+`keys.txt` se escribe solo tras una finalización de chat en vivo; `accounts.json` conserva el nombre de usuario / correo electrónico / id de clave.
 
 ### 🖱️ El lanzador
 
-El lanzador solicita la lista de proxies y la cantidad, las recuerda y ejecuta el CLI — crear, verificar, probar salidas, configuración, ayuda, Conectar a 9Router.
+El lanzador solicita la lista de proxies y la cantidad, las recuerda y ejecuta el CLI — acuñar, verificar, probar salidas, ajustes, ayuda, Conectar a 9Router.
 
 ## ✅ Verificado y funcionando — cada clave se prueba
 
@@ -124,12 +124,12 @@ inbox (one address per account)                                  a fresh address
 
 | Paso | Llamada | Notas |
 | --- | --- | --- |
-| estado | `GET /api/status` | filtros: registro activado, verificación por correo activada, captcha **desactivado** |
+| estado | `GET /api/status` | puertas: registro activado, verificación por correo activada, captcha **desactivado** |
 | enviar código | `GET /api/verification?email=…` | código de 6 caracteres desde el buzón |
 | registro | `POST /api/user/register` | correo electrónico + código + contraseña |
 | inicio de sesión | `POST /api/user/login` | token de sesión |
 | clave | `POST /api/token/` (+ revelar) | escrita en disco una vez |
-| prueba | `POST /v1/chat/completions` | chat-200 con contenido = la clave está activa |
+| prueba | `POST /v1/chat/completions` | chat-200 con contenido = la clave está viva |
 
 ## ⚙️ Opciones del CLI
 
@@ -148,26 +148,30 @@ node src/cli.js --help
 
 ## 🛰️ Detrás de un proxy
 
-**Obligatorio — sin respaldo de conexión directa.** Cada solicitud sale a través de una salida; el carril midió `/api/status` agotando el tiempo de espera en salidas gratuitas agotadas (grupo de 15 líneas, `TIMEOUT status after 90s`), así que usa `--screen` antes de una ejecución grande.
+**Opcional — recomendado a escala (límites por IP, bloqueos).** La herramienta también funciona sin proxy.
+
+- **Con un grupo:** pasa `--pool <file>` (o define `WEYTOKEN_PROXIES`) y cada solicitud pasa por una salida de esa lista — una línea muerta hace fallar ese intento y la herramienta pasa a la siguiente (fail-closed mientras se proporciona un grupo; el grupo se vuelve a probar al usarse).
+- **Sin un grupo:** el CLI imprime `running WITHOUT a proxy (direct)` y se conecta directamente. Nada del registro, check-in, acuñación de claves o verificación cambia — solo desde dónde salen los paquetes.
+- Ejecuta `--screen` en cualquiera de los dos modos: prueba las salidas que tengas (o la ruta directa) contra el proveedor antes de una ejecución real.
 
 ## 📄 Archivos
 
 | Ruta | Contenido |
 | --- | --- |
 | `keys.txt` | una clave verificada en vivo por línea — ignorada por git |
-| `accounts.json` | nombre de usuario / correo electrónico / id de la clave |
+| `accounts.json` | nombre de usuario / correo electrónico / id de clave |
 | `proxies.txt` | tus salidas — ignorado por git |
 | `outputs/` | registros de ejecución — ignorados por git |
 
 ## 🔌 Conectar a 9Router
 
-[9Router](https://9router.com) es un enrutador autoalojado y compatible con OpenAI:
+[9Router](https://9router.com) es un router autoalojado compatible con OpenAI:
 
 ```bash
 node src/connect-9router.js --base http://localhost:20128 --password 123456
 ```
 
-Valores predeterminados: `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `--model deepseek-v4.1-flash`. Los modelos se sirven como `weytoken/<model id>`.
+Predeterminados: `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `--model deepseek-v4.1-flash`. Los modelos se sirven como `weytoken/<model id>`.
 
 ## 🔑 Qué te da una clave
 
@@ -181,7 +185,7 @@ Valores predeterminados: `--prefix weytoken`, `--base-url https://api.weytoken.c
 
 ## 🐞 Problemas
 
-Si WeyToken cambia la forma del registro o su paso de cuota, la herramienta se detiene ahí y lo indica. **[Abre un problema](../../issues)** con el comando y la salida exacta.
+Si WeyToken cambia la forma del registro o su paso de cuota, la herramienta se detiene ahí y lo indica. **[Abre un issue](../../issues)** con el comando y la salida exacta.
 
 ## 📄 Licencia
 

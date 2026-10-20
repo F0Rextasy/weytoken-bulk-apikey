@@ -44,13 +44,13 @@ WeyToken (微元算力), kayıt formu **captcha'sız** olan bir New API panelidi
 | Kayıt | e-posta + 6 karakterlik kod — **captcha yok** (`turnstile_check: false`) |
 | Alternatif kapı | GitHub OAuth (`github_oauth: true`) |
 | Katalog | **63 fiyat satırı**; sıfır oranlı: `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
-| v4.1 hattı | `deepseek-v4.1-flash` oran 0,85, grup `default` |
-| Posta hattı | Mailtrap gelen adresleri hatta çalıştı; broker kutuları da geçer |
+| v4.1 hattı | `deepseek-v4.1-flash` oran 0.85, grup `default` |
+| Posta hattı | Mailtrap gelen adresleri bu hatta çalıştı; broker kutuları da geçer |
 
 > 💡 Ücretsiz katman WeyToken tarafından belirlenir ve değişebilir. Güncel sayıları [api.weytoken.com](https://api.weytoken.com) adresinden kontrol edin — ve kararı aracın kendi kapısına bırakın:
 
 ```bash
-node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
+node src/cli.js --verify-only     # keys.txt içindeki her anahtar gerçek bir sohbet çağrısıyla yeniden test edilir
 ```
 
 ## 🤖 Modeller — 63'ünün tamamı
@@ -101,10 +101,10 @@ Başlatıcı proxy listesini ve sayıyı sorar, bunları hatırlar ve CLI'yi ça
 | --- | --- |
 | `GET /api/status` | **200** — kayıt açık, e-posta doğrulama açık, **captcha kapalı** |
 | `GET /api/verification?email=…` | **200** `{"message":"","success":true}` |
-| kayıt + giriş | **200** — oturum elde |
-| `POST /api/token/` (+ reveal) | **200** — anahtar bir kez yazıldı |
+| kayıt + giriş | **200** — oturum elde edildi |
+| `POST /api/token/` (+ göster) | **200** — anahtar bir kez yazıldı |
 | `POST /v1/chat/completions` (`deepseek-v4.1-flash`) — yazılmadan önce **her** anahtar için | gerçek içerikle **200**; ilk çağrıdan sonra kota 1.499.887 |
-| sohbet kontrolünde başarısız olan bir anahtar | asla yazılmaz — hesap `accounts.json` içinde kalır |
+| sohbet kontrolünde başarısız olan anahtar | asla yazılmaz — hesap `accounts.json` içinde kalır |
 
 ```bash
 node src/cli.js --verify-only
@@ -114,12 +114,12 @@ node src/cli.js --screen
 ## 🧭 Nasıl çalışır
 
 ```
-inbox (one address per account)                                  a fresh address per account
+gelen kutusu (hesap başına bir adres)                            hesap başına yeni bir adres
    │
-   ├─▶ sign-up: WeyToken page → e-mail address → code / link from the inbox
-   ├─▶ session: the account's cookies or access token in hand
-   ├─▶ key mint: the account's key endpoint → plaintext key returned once (written to disk immediately)
-   └─▶ live proof: POST https://api.weytoken.com/v1/chat/completions → real content = the key is live
+   ├─▶ kayıt: WeyToken sayfası → e-posta adresi → gelen kutusundan kod / bağlantı
+   ├─▶ oturum: hesabın çerezleri veya erişim belirteci elde edildi
+   ├─▶ anahtar üretimi: hesabın anahtar uç noktası → düz metin anahtar bir kez döndürülür (hemen diske yazılır)
+   └─▶ canlı kanıt: POST https://api.weytoken.com/v1/chat/completions → gerçek içerik = anahtar canlı
 ```
 
 | Adım | Çağrı | Notlar |
@@ -128,27 +128,31 @@ inbox (one address per account)                                  a fresh address
 | kod gönder | `GET /api/verification?email=…` | gelen kutusundan 6 karakterlik kod |
 | kayıt | `POST /api/user/register` | e-posta + kod + parola |
 | giriş | `POST /api/user/login` | oturum belirteci |
-| anahtar | `POST /api/token/` (+ reveal) | diske bir kez yazılır |
+| anahtar | `POST /api/token/` (+ göster) | diske bir kez yazılır |
 | kanıt | `POST /v1/chat/completions` | içerikli sohbet-200 = anahtar canlı |
 
 ## ⚙️ CLI seçenekleri
 
 ```bash
-node src/cli.js --count N        # mint N keys
-node src/cli.js --verify-only    # re-verify every key in keys.txt
-node src/cli.js --screen         # exit pool self-test
+node src/cli.js --count N        # N anahtar üret
+node src/cli.js --verify-only    # keys.txt içindeki her anahtarı yeniden doğrula
+node src/cli.js --screen         # çıkış havuzu öz testi
 node src/cli.js --connect-9router
 node src/cli.js --help
 ```
 
-| Ortam | Varsayılan | Anlam |
+| Ortam değişkeni | Varsayılan | Anlamı |
 | --- | --- | --- |
 | `WEYTOKEN_PROXIES` | `proxies.txt` | çıkış havuzu, proxy başına bir satır |
 | `WEYTOKEN_MODEL` | `deepseek-v4.1-flash` | canlı doğrulama için model |
 
 ## 🛰️ Proxy arkasında
 
-**Gerekli — doğrudan bağlantı yedeği yok.** Her istek bir çıkıştan geçer; hat, yorgun ücretsiz çıkışlarda `/api/status` zaman aşımına uğradı (15 satırlık havuz, `TIMEOUT status after 90s`), bu yüzden büyük bir çalıştırmadan önce `--screen` yapın.
+**İsteğe bağlı — ölçekte önerilir (IP başına limitler, yasaklar).** Araç proxy olmadan da çalışır.
+
+- **Havuzla:** `--pool <file>` geçin (veya `WEYTOKEN_PROXIES` ayarlayın) ve her istek o listeden bir çıkıştan geçer — ölü bir hat o denemeyi başarısız kılar ve araç bir sonrakine geçer (havuz sağlandığında fail-closed; havuz kullanımda yeniden yoklanır).
+- **Havuz olmadan:** CLI `running WITHOUT a proxy (direct)` yazdırır ve doğrudan bağlanır. Kayıt, giriş kontrolü, anahtar üretimi veya doğrulamayla ilgili hiçbir şey değişmez — yalnızca paketlerin nereden çıktığı değişir.
+- Her iki moda karşı `--screen` çalıştırın: gerçek bir çalıştırmadan önce sahip olduğunuz çıkışları (veya doğrudan rotayı) sağlayıcıya karşı test eder.
 
 ## 📄 Dosyalar
 
@@ -176,12 +180,12 @@ Varsayılanlar: `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `
 | 🏢 Sağlayıcı | **WeyToken (微元算力)** — [api.weytoken.com](https://api.weytoken.com) |
 | 🎁 Sağlayıcının verdikleri | ~1,5M başlangıç kotası, captcha'sız kayıt, 63 satırlık katalog |
 | 🔑 Bir anahtarın size kazandırdıkları | kendi hesabında bir anahtar: `https://api.weytoken.com/v1` üzerindeki katalog kimlikleri |
-| 🌐 API biçimi | OpenAI uyumlu: `POST https://api.weytoken.com/v1/chat/completions` |
+| 🌐 API şekli | OpenAI uyumlu: `POST https://api.weytoken.com/v1/chat/completions` |
 | 🔒 Verileriniz | yalnızca `api.weytoken.com` ve gelen kutusu arka ucunuzla iletişim kurulur |
 
 ## 🐞 Sorunlar
 
-WeyToken kayıt biçimini veya kota adımını değiştirirse, araç orada durur ve bunu bildirir. Komut ve tam çıktıyla birlikte **[bir sorun açın](../../issues)**.
+WeyToken kayıt şeklini veya kota adımını değiştirirse, araç orada durur ve bunu bildirir. Komut ve tam çıktıyla birlikte **[bir sorun açın](../../issues)**.
 
 ## 📄 Lisans
 
@@ -189,6 +193,6 @@ MIT © 2026 — bkz. [LICENSE](LICENSE).
 
 <div align="center">
 
-**[MIT](LICENSE)** © 2026 weytoken-bulk-apikey contributors
+**[MIT](LICENSE)** © 2026 weytoken-bulk-apikey katkıda bulunanlar
 
 </div>

@@ -34,34 +34,34 @@
 
 ## ✨ これが存在する理由
 
-WeyToken（微元算力）は New API パネルで、その登録フォームは**キャプチャ不要**（`turnstile_check: false`）です — メールアドレス + 6 文字のコードがすべての関門で、新しいアカウントには約 **150 万クォータ単位**が付与されます（最初の呼び出し後の実測残高: 1,499,887、`quota_per_unit` 500,000）。料金表には **63 行**があり、ゼロレートのメディアモデル（`doubao-seedream-*`、`gpt-image-2-count`）も含まれます。GitHub OAuth は別の入口として提供され、チャットで検証済みのデフォルトは `deepseek-v4.1-flash` です。
+WeyToken（微元算力）は、登録フォームが**キャプチャ不要**（`turnstile_check: false`）の New API パネルです — メールアドレス + 6文字のコードがすべての関門で、新しいアカウントには約 **150万クォータ単位**が付与されます（最初の呼び出し後の実測残高: 1,499,887、`quota_per_unit` 500,000）。料金表には**63行**が含まれ、ゼロレートのメディアモデル（`doubao-seedream-*`、`gpt-image-2-count`）も含まれます。GitHub OAuth も代替の入口として提供されており、チャットで検証済みのデフォルトは `deepseek-v4.1-flash` です。
 
 ## 🎁 無料枠 — どれだけ得られるか
 
 | 項目 | 値 |
 | --- | --- |
-| 開始クォータ | **約 1,500,000 単位**の実測値（最初のチャット直後の `quotaEnd`、`quota_per_unit` 500,000） |
-| サインアップ | メールアドレス + 6 文字のコード — **キャプチャなし**（`turnstile_check: false`） |
-| 別の入口 | GitHub OAuth（`github_oauth: true`） |
-| カタログ | **63 の料金行**、ゼロレート: `doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-260128`、`gpt-image-2-count` |
+| 開始クォータ | **約1,500,000単位**（実測、最初のチャット直後の `quotaEnd`、`quota_per_unit` 500,000） |
+| 登録 | メールアドレス + 6文字のコード — **キャプチャなし**（`turnstile_check: false`） |
+| 代替の入口 | GitHub OAuth（`github_oauth: true`） |
+| カタログ | **63の料金行**、ゼロレート: `doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-260128`、`gpt-image-2-count` |
 | v4.1 ライン | `deepseek-v4.1-flash` レート 0.85、グループ `default` |
-| メール経路 | Mailtrap の受信アドレスがこのレーンで機能、ブローカーのボックスも通過 |
+| メール経路 | Mailtrap の受信アドレスがこのレーンで動作、ブローカーのボックスも通過 |
 
-> 💡 無料枠は WeyToken が設定するもので、変更される可能性があります。最新の数値は [api.weytoken.com](https://api.weytoken.com) で確認してください — そしてツール自身のゲートに判断を委ねてください:
+> 💡 無料枠は WeyToken によって設定され、変更される可能性があります。最新の数値は [api.weytoken.com](https://api.weytoken.com) で確認してください — そしてツール自身のゲートに判断を委ねてください:
 
 ```bash
 node src/cli.js --verify-only     # every key in keys.txt is re-tested with a real chat call
 ```
 
-## 🤖 モデル — 全 63 種
+## 🤖 モデル — 全63モデル
 
-料金表には **63 行**があります。チャットで検証済みのデフォルト:
+料金表には**63行**が含まれます。チャットで検証済みのデフォルト:
 
 | モデル ID | 備考 |
 | --- | --- |
-| `deepseek-v4.1-flash` | `default` で実際のコンテンツとともに **200**、小さな呼び出しあたりのクォータ差分は約 113 |
+| `deepseek-v4.1-flash` | `default` で実際のコンテンツとともに **200**、小さな呼び出しごとにクォータ差分は約113 |
 
-ゼロレートのメディア行（レート 0 で無料、画像/動画）: `doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-260128`、`gpt-image-2-count`。
+ゼロレートのメディア行（レート0で無料、画像/動画）: `doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-260128`、`gpt-image-2-count`。
 
 ```bash
 curl https://api.weytoken.com/v1/chat/completions \
@@ -89,19 +89,19 @@ node src/launcher.js
 # or: node src/cli.js --count 30
 ```
 
-`keys.txt` は実際のチャット補完が成功した後にのみ書き込まれます。`accounts.json` はユーザー名 / メールアドレス / キー ID を保持します。
+`keys.txt` は実際のチャット補完が成功した後にのみ書き込まれます。`accounts.json` にはユーザー名 / メールアドレス / キー ID が保持されます。
 
 ### 🖱️ ランチャー
 
 ランチャーはプロキシリストと件数を尋ね、それらを記憶して CLI を実行します — 発行、検証、出口のスクリーニング、設定、ヘルプ、9Router への接続。
 
-## ✅ 検証済み — すべてのキーがテストされています
+## ✅ 動作検証済み — すべてのキーがテストされています
 
 | チェック | 結果 |
 | --- | --- |
 | `GET /api/status` | **200** — 登録オン、メール認証オン、**キャプチャオフ** |
 | `GET /api/verification?email=…` | **200** `{"message":"","success":true}` |
-| 登録 + ログイン | **200** — セッション取得済み |
+| 登録 + ログイン | **200** — セッション取得 |
 | `POST /api/token/`（+ 表示） | **200** — キーは一度だけ書き込まれる |
 | `POST /v1/chat/completions`（`deepseek-v4.1-flash`）— 書き込まれる前の**すべての**キーに対して | 実際のコンテンツとともに **200**、最初の呼び出し後のクォータ 1,499,887 |
 | チャットチェックに失敗したキー | 書き込まれない — アカウントは `accounts.json` に残る |
@@ -125,11 +125,11 @@ inbox (one address per account)                                  a fresh address
 | ステップ | 呼び出し | 備考 |
 | --- | --- | --- |
 | status | `GET /api/status` | ゲート: 登録オン、メール認証オン、キャプチャ**オフ** |
-| コード送信 | `GET /api/verification?email=…` | 受信トレイからの 6 文字コード |
+| コード送信 | `GET /api/verification?email=…` | 受信トレイからの6文字コード |
 | 登録 | `POST /api/user/register` | メールアドレス + コード + パスワード |
 | ログイン | `POST /api/user/login` | セッショントークン |
 | キー | `POST /api/token/`（+ 表示） | 一度だけディスクに書き込まれる |
-| 証明 | `POST /v1/chat/completions` | コンテンツ付きの chat-200 = キーが有効 |
+| 証明 | `POST /v1/chat/completions` | コンテンツ付きのチャット200 = キーが有効 |
 
 ## ⚙️ CLI オプション
 
@@ -143,18 +143,22 @@ node src/cli.js --help
 
 | 環境変数 | デフォルト | 意味 |
 | --- | --- | --- |
-| `WEYTOKEN_PROXIES` | `proxies.txt` | 出口プール、1 行につき 1 プロキシ |
+| `WEYTOKEN_PROXIES` | `proxies.txt` | 出口プール、1行につき1プロキシ |
 | `WEYTOKEN_MODEL` | `deepseek-v4.1-flash` | ライブ検証に使用するモデル |
 
 ## 🛰️ プロキシの背後で
 
-**必須 — 直接接続へのフォールバックはありません。** すべてのリクエストは出口を経由します。このレーンでは、疲弊した無料出口で `/api/status` がタイムアウトすることが計測されました（15 行のプール、`TIMEOUT status after 90s`）。そのため、大規模な実行の前に `--screen` を実行してください。
+**オプション — 規模が大きい場合に推奨（IPごとの制限、BAN）。** プロキシなしでもツールは動作します。
+
+- **プールあり:** `--pool <file>` を渡す（または `WEYTOKEN_PROXIES` を設定する）と、すべてのリクエストがそのリストの出口を経由します — 死んだ回線はその試行を失敗させ、ツールは次へ進みます（プールが提供されている間はフェイルクローズ、プールは使用時に再プローブされます）。
+- **プールなし:** CLI は `running WITHOUT a proxy (direct)` と表示し、直接接続します。登録、チェックイン、キー発行、検証について何も変わりません — パケットが出ていく場所だけが変わります。
+- どちらのモードでも `--screen` を実行してください: 実際の実行前に、利用可能な出口（または直接ルート）をプロバイダーに対してテストします。
 
 ## 📄 ファイル
 
 | パス | 内容 |
 | --- | --- |
-| `keys.txt` | 1 行につき 1 つのライブ検証済みキー — git 無視 |
+| `keys.txt` | 1行につき1つのライブ検証済みキー — git 無視 |
 | `accounts.json` | ユーザー名 / メールアドレス / キー ID |
 | `proxies.txt` | あなたの出口 — git 無視 |
 | `outputs/` | 実行ログ — git 無視 |
@@ -169,19 +173,19 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 
 デフォルト: `--prefix weytoken`、`--base-url https://api.weytoken.com/v1`、`--model deepseek-v4.1-flash`。モデルは `weytoken/<model id>` として提供されます。
 
-## 🔑 1 つのキーで得られるもの
+## 🔑 1つのキーで得られるもの
 
 | | |
 | --- | --- |
 | 🏢 プロバイダー | **WeyToken（微元算力）** — [api.weytoken.com](https://api.weytoken.com) |
-| 🎁 プロバイダーが提供するもの | 約 150 万の開始クォータ、キャプチャ不要のサインアップ、63 行のカタログ |
-| 🔑 1 つのキーで得られるもの | 独自のアカウント上の 1 つのキー: `https://api.weytoken.com/v1` 上のカタログ ID |
+| 🎁 プロバイダーが提供するもの | 約150万の開始クォータ、キャプチャ不要の登録、63行のカタログ |
+| 🔑 1つのキーで得られるもの | 独自のアカウント上の1つのキー: `https://api.weytoken.com/v1` のカタログ ID |
 | 🌐 API の形式 | OpenAI 互換: `POST https://api.weytoken.com/v1/chat/completions` |
 | 🔒 あなたのデータ | `api.weytoken.com` とあなたの受信トレイバックエンドのみが接触されます |
 
 ## 🐞 問題
 
-WeyToken が登録の形式やクォータのステップを変更した場合、ツールはそこで停止し、その旨を報告します。コマンドと正確な出力を添えて **[issue を作成してください](../../issues)**。
+WeyToken が登録の形式やクォータのステップを変更した場合、ツールはそこで停止し、その旨を報告します。コマンドと正確な出力を添えて **[issue を開いてください](../../issues)**。
 
 ## 📄 ライセンス
 

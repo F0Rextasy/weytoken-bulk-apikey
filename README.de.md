@@ -20,7 +20,7 @@
 [![9Router](https://img.shields.io/badge/9Router-connector-8B5CF6?style=for-the-badge)](#-connect-to-9router)
 [![X](https://img.shields.io/badge/X-%40bigbullapp-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/bigbullapp)
 
-[🛠 Schnellstart](#-quick-start) · [🎁 Free-Tier](#-free-tier--how-much-you-get) · [🤖 Modelle](#-models--all-63-of-them) · [🧪 API verwenden](#-how-to-use-the-api) · [✅ Verifiziert](#-verified-working--every-key-is-tested) · [🧭 Funktionsweise](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Optionen](#️-cli-options) · [🛰️ Proxys](#️-behind-a-proxy) · [🐞 Issues](#-issues)
+[🛠 Schnellstart](#-quick-start) · [🎁 Free-Tier](#-free-tier--how-much-you-get) · [🤖 Modelle](#-models--all-63-of-them) · [🧪 Die API nutzen](#-how-to-use-the-api) · [✅ Verifiziert](#-verified-working--every-key-is-tested) · [🧭 So funktioniert es](#-how-it-works) · [🔌 9Router](#-connect-to-9router) · [⚙️ Optionen](#️-cli-options) · [🛰️ Proxies](#️-behind-a-proxy) · [🐞 Issues](#-issues)
 
 </div>
 
@@ -34,7 +34,7 @@
 
 ## ✨ Warum es das gibt
 
-WeyToken (微元算力) ist ein New-API-Panel, dessen Registrierungsformular **captcha-frei** ist (`turnstile_check: false`) — E-Mail + 6-stelliger Code sind die gesamte Hürde, und das frische Konto landet mit ungefähr **1,5 Mio. Quota-Einheiten** (gemessenes Guthaben nach dem ersten Aufruf: 1.499.887; `quota_per_unit` 500.000). Die Preisliste umfasst **63 Zeilen**, darunter Zero-Ratio-Medienmodelle (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth wird als alternative Tür angeboten, und der chat-verifizierte Standard ist `deepseek-v4.1-flash`.
+WeyToken (微元算力) ist ein New-API-Panel, dessen Registrierungsformular **captcha-frei** ist (`turnstile_check: false`) — E-Mail + 6-stelliger Code sind die gesamte Hürde, und das frische Konto landet bei ungefähr **1,5 Mio. Quota-Einheiten** (gemessenes Guthaben nach dem ersten Aufruf: 1.499.887; `quota_per_unit` 500.000). Die Preisliste umfasst **63 Zeilen**, darunter Zero-Ratio-Medienmodelle (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth wird als alternative Tür angeboten, und der chat-verifizierte Standard ist `deepseek-v4.1-flash`.
 
 ## 🎁 Free-Tier — wie viel du bekommst
 
@@ -44,8 +44,8 @@ WeyToken (微元算力) ist ein New-API-Panel, dessen Registrierungsformular **c
 | Registrierung | E-Mail + 6-stelliger Code — **kein Captcha** (`turnstile_check: false`) |
 | Alternative Tür | GitHub OAuth (`github_oauth: true`) |
 | Katalog | **63 Preiszeilen**; Zero-Ratio: `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
-| v4.1-Linie | `deepseek-v4.1-flash` Ratio 0.85, Gruppe `default` |
-| Mail-Rail | Mailtrap-Inbound-Adressen funktionierten in der Lane; Broker-Boxen bestehen ebenfalls |
+| v4.1-Linie | `deepseek-v4.1-flash` Ratio 0,85, Gruppe `default` |
+| Mail-Rail | Mailtrap-Inbound-Adressen funktionierten in der Lane; Broker-Boxen gehen ebenfalls durch |
 
 > 💡 Der Free-Tier wird von WeyToken festgelegt und kann sich ändern. Prüfe die Live-Zahlen unter [api.weytoken.com](https://api.weytoken.com) — und lass das Gate des Tools selbst entscheiden:
 
@@ -59,7 +59,7 @@ Die Preisliste umfasst **63 Zeilen**. Der chat-verifizierte Standard:
 
 | Modell-ID | Hinweis |
 | --- | --- |
-| `deepseek-v4.1-flash` | **200** mit echtem Inhalt auf `default`; Quota-Delta ~113 pro winzigem Aufruf |
+| `deepseek-v4.1-flash` | **200** mit echtem Inhalt auf `default`; Quota-Delta ~113 pro Mini-Aufruf |
 
 Zero-Ratio-Medienzeilen (kostenlos bei Ratio 0, Bild/Video): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
 
@@ -69,7 +69,7 @@ curl https://api.weytoken.com/v1/chat/completions \
   -d '{"model":"deepseek-v4.1-flash","messages":[{"role":"user","content":"hi"}],"max_tokens":8}'
 ```
 
-## 🧪 So verwendest du die API
+## 🧪 So nutzt du die API
 
 Base-URL **`https://api.weytoken.com/v1`** — OpenAI-kompatibel.
 
@@ -93,7 +93,7 @@ node src/launcher.js
 
 ### 🖱️ Der Launcher
 
-Der Launcher fragt nach der Proxy-Liste und der Anzahl, merkt sie sich und führt die CLI aus — Mint, Verify, Screen-Exits, Settings, Help, Connect to 9Router.
+Der Launcher fragt nach der Proxy-Liste und der Anzahl, merkt sie sich und führt die CLI aus — Mint, Verify, Screen-Exits, Einstellungen, Hilfe, Connect to 9Router.
 
 ## ✅ Verifiziert funktionierend — jeder Schlüssel wird getestet
 
@@ -111,7 +111,7 @@ node src/cli.js --verify-only
 node src/cli.js --screen
 ```
 
-## 🧭 Funktionsweise
+## 🧭 So funktioniert es
 
 ```
 inbox (one address per account)                                  a fresh address per account
@@ -125,7 +125,7 @@ inbox (one address per account)                                  a fresh address
 | Schritt | Aufruf | Hinweise |
 | --- | --- | --- |
 | status | `GET /api/status` | Gates: Registrierung an, E-Mail-Verifizierung an, Captcha **aus** |
-| Code senden | `GET /api/verification?email=…` | 6-stelliger Code aus der Inbox |
+| Code senden | `GET /api/verification?email=…` | 6-stelliger Code aus dem Postfach |
 | registrieren | `POST /api/user/register` | E-Mail + Code + Passwort |
 | login | `POST /api/user/login` | Session-Token |
 | key | `POST /api/token/` (+ reveal) | einmal auf die Festplatte geschrieben |
@@ -148,7 +148,11 @@ node src/cli.js --help
 
 ## 🛰️ Hinter einem Proxy
 
-**Erforderlich — kein Direktverbindungs-Fallback.** Jede Anfrage verlässt das System über einen Exit; die Lane maß einen Timeout von `/api/status` bei überlasteten kostenlosen Exits (15-Zeilen-Pool, `TIMEOUT status after 90s`), also `--screen` vor einem großen Lauf.
+**Optional — bei Skalierung empfohlen (Limits pro IP, Bans).** Das Tool funktioniert auch ohne Proxy.
+
+- **Mit einem Pool:** übergib `--pool <file>` (oder setze `WEYTOKEN_PROXIES`), und jede Anfrage geht durch einen Exit aus dieser Liste — eine tote Leitung lässt diesen Versuch fehlschlagen, und das Tool geht zum nächsten über (fail-closed, solange ein Pool angegeben ist; der Pool wird bei der Nutzung erneut geprüft).
+- **Ohne Pool:** die CLI gibt `running WITHOUT a proxy (direct)` aus und verbindet direkt. An Registrierung, Check-in, Key-Minting oder Verifizierung ändert sich nichts — nur daran, wo die Pakete rausgehen.
+- Führe `--screen` in beiden Modi aus: es testet die Exits, die du hast (oder die direkte Route), gegen den Anbieter, bevor ein echter Lauf startet.
 
 ## 📄 Dateien
 
@@ -157,7 +161,7 @@ node src/cli.js --help
 | `keys.txt` | ein live-verifizierter Schlüssel pro Zeile — von Git ignoriert |
 | `accounts.json` | Benutzername / E-Mail / Key-ID |
 | `proxies.txt` | deine Exits — von Git ignoriert |
-| `outputs/` | Lauf-Logs — von Git ignoriert |
+| `outputs/` | Run-Logs — von Git ignoriert |
 
 ## 🔌 Mit 9Router verbinden
 
@@ -177,11 +181,11 @@ Standardwerte: `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `-
 | 🎁 Was der Anbieter gibt | ~1,5 Mio. Startguthaben, captcha-freie Registrierung, 63-zeiliger Katalog |
 | 🔑 Was ein Schlüssel dir bringt | ein Schlüssel auf seinem eigenen Konto: die Katalog-IDs auf `https://api.weytoken.com/v1` |
 | 🌐 API-Form | OpenAI-kompatibel: `POST https://api.weytoken.com/v1/chat/completions` |
-| 🔒 Deine Daten | nur `api.weytoken.com` und dein Inbox-Backend werden kontaktiert |
+| 🔒 Deine Daten | nur `api.weytoken.com` und dein Postfach-Backend werden kontaktiert |
 
 ## 🐞 Issues
 
-Wenn WeyToken die Registrierungsform oder seinen Quota-Schritt ändert, stoppt das Tool dort und sagt es. **[Öffne ein Issue](../../issues)** mit dem Befehl und der exakten Ausgabe.
+Wenn WeyToken die Registrierungsform oder seinen Quota-Schritt ändert, stoppt das Tool dort und sagt es dir. **[Öffne ein Issue](../../issues)** mit dem Befehl und der exakten Ausgabe.
 
 ## 📄 Lizenz
 

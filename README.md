@@ -148,7 +148,11 @@ node src/cli.js --help
 
 ## 🛰️ Behind a proxy
 
-**Required — no direct-connection fallback.** Every request leaves through an exit; the lane measured `/api/status` timing out on tired free exits (15-line pool, `TIMEOUT status after 90s`), so `--screen` before a big run.
+**Optional — recommended at scale (per-IP limits, bans).** The tool works without a proxy too.
+
+- **With a pool:** pass `--pool <file>` (or set `WEYTOKEN_PROXIES`) and every request goes through an exit from that list — a dead line fails that attempt and the tool moves to the next one (fail-closed while a pool is provided; the pool is re-probed at use).
+- **Without a pool:** the CLI prints `running WITHOUT a proxy (direct)` and connects directly. Nothing about sign-up, check-in, key minting or verification changes — only where the packets leave from.
+- Run `--screen` against either mode: it tests the exits you have (or the direct route) against the provider before a real run.
 
 ## 📄 Files
 

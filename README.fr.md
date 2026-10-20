@@ -11,7 +11,7 @@
 
 # weytoken-bulk-apikey
 
-**Créez en masse des comptes WeyToken avec des clés API générées automatiquement — inférence compatible OpenAI + connecteur 9Router.**
+**Création en masse de comptes WeyToken avec clés API générées automatiquement — inférence compatible OpenAI + connecteur 9Router.**
 
 [![Node](https://img.shields.io/badge/Node-%E2%89%A518-3DA639?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-blue?style=for-the-badge)](#)
@@ -32,9 +32,9 @@
 
 ---
 
-## ✨ Pourquoi cela existe
+## ✨ Pourquoi ce projet existe
 
-WeyToken (微元算力) est un panneau New API dont le formulaire d'inscription est **sans captcha** (`turnstile_check: false`) — e-mail + code à 6 caractères constituent toute la barrière, et le nouveau compte arrive avec environ **1,5 M d'unités de quota** (solde mesuré après le premier appel : 1 499 887 ; `quota_per_unit` 500 000). La grille tarifaire comporte **63 lignes**, y compris des modèles multimédias à ratio nul (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth est proposé comme porte alternative, et le modèle par défaut vérifié par chat est `deepseek-v4.1-flash`.
+WeyToken (微元算力) est un panneau New API dont le formulaire d'inscription est **sans captcha** (`turnstile_check: false`) — e-mail + code à 6 caractères constituent toute la barrière, et le nouveau compte arrive avec environ **1,5 million d'unités de quota** (solde mesuré après le premier appel : 1 499 887 ; `quota_per_unit` 500 000). La grille tarifaire comporte **63 lignes**, y compris des modèles média à ratio zéro (`doubao-seedream-*`, `gpt-image-2-count`), GitHub OAuth est proposé comme porte alternative, et le modèle par défaut vérifié par chat est `deepseek-v4.1-flash`.
 
 ## 🎁 Offre gratuite — ce que vous obtenez
 
@@ -43,7 +43,7 @@ WeyToken (微元算力) est un panneau New API dont le formulaire d'inscription 
 | Quota de départ | **~1 500 000 unités** mesurées (`quotaEnd` juste après le premier chat ; `quota_per_unit` 500 000) |
 | Inscription | e-mail + code à 6 caractères — **sans captcha** (`turnstile_check: false`) |
 | Porte alternative | GitHub OAuth (`github_oauth: true`) |
-| Catalogue | **63 lignes tarifaires** ; ratio nul : `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
+| Catalogue | **63 lignes tarifaires** ; ratio zéro : `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
 | Ligne v4.1 | `deepseek-v4.1-flash` ratio 0.85, groupe `default` |
 | Rail mail | Les adresses entrantes Mailtrap ont fonctionné dans la voie ; les boîtes broker passent aussi |
 
@@ -61,7 +61,7 @@ La grille tarifaire comporte **63 lignes**. Le modèle par défaut vérifié par
 | --- | --- |
 | `deepseek-v4.1-flash` | **200** avec du contenu réel sur `default` ; delta de quota ~113 par petit appel |
 
-Lignes multimédias à ratio nul (gratuites à ratio 0, image/vidéo) : `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
+Lignes média à ratio zéro (gratuites à ratio 0, image/vidéo) : `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
 
 ```bash
 curl https://api.weytoken.com/v1/chat/completions \
@@ -93,7 +93,7 @@ node src/launcher.js
 
 ### 🖱️ Le lanceur
 
-Le lanceur demande la liste de proxies et le nombre, les mémorise, et exécute le CLI — création, vérification, test de sortie, paramètres, aide, Connect to 9Router.
+Le lanceur demande la liste de proxies et le nombre, les mémorise, et exécute le CLI — création, vérification, test des sorties, paramètres, aide, Connect to 9Router.
 
 ## ✅ Vérifié fonctionnel — chaque clé est testée
 
@@ -143,12 +143,16 @@ node src/cli.js --help
 
 | Env | Défaut | Signification |
 | --- | --- | --- |
-| `WEYTOKEN_PROXIES` | `proxies.txt` | pool de sortie, une ligne par proxy |
+| `WEYTOKEN_PROXIES` | `proxies.txt` | pool de sorties, une ligne par proxy |
 | `WEYTOKEN_MODEL` | `deepseek-v4.1-flash` | modèle pour la vérification en direct |
 
 ## 🛰️ Derrière un proxy
 
-**Requis — aucun repli en connexion directe.** Chaque requête sort par une sortie ; la voie a mesuré `/api/status` en expiration sur des sorties gratuites fatiguées (pool de 15 lignes, `TIMEOUT status after 90s`), donc `--screen` avant une grosse exécution.
+**Optionnel — recommandé à grande échelle (limites par IP, bannissements).** L'outil fonctionne aussi sans proxy.
+
+- **Avec un pool :** passez `--pool <file>` (ou définissez `WEYTOKEN_PROXIES`) et chaque requête passe par une sortie de cette liste — une ligne morte fait échouer cette tentative et l'outil passe à la suivante (fail-closed tant qu'un pool est fourni ; le pool est re-testé à l'usage).
+- **Sans pool :** le CLI affiche `running WITHOUT a proxy (direct)` et se connecte directement. Rien ne change pour l'inscription, le check-in, la création de clé ou la vérification — seul le point de départ des paquets change.
+- Lancez `--screen` dans l'un ou l'autre mode : il teste les sorties dont vous disposez (ou la route directe) contre le fournisseur avant une exécution réelle.
 
 ## 📄 Fichiers
 
@@ -169,14 +173,14 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 
 Défauts : `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `--model deepseek-v4.1-flash`. Les modèles sont servis sous `weytoken/<model id>`.
 
-## 🔑 Ce qu'une clé vous apporte
+## 🔑 Ce qu'une clé vous donne
 
 | | |
 | --- | --- |
 | 🏢 Fournisseur | **WeyToken (微元算力)** — [api.weytoken.com](https://api.weytoken.com) |
-| 🎁 Ce que le fournisseur donne | ~1,5 M de quota de départ, inscription sans captcha, catalogue de 63 lignes |
-| 🔑 Ce qu'une clé vous apporte | une clé sur son propre compte : les ids du catalogue sur `https://api.weytoken.com/v1` |
-| 🌐 Forme de l'API | compatible OpenAI : `POST https://api.weytoken.com/v1/chat/completions` |
+| 🎁 Ce que le fournisseur offre | ~1,5 M de quota de départ, inscription sans captcha, catalogue de 63 lignes |
+| 🔑 Ce qu'une clé vous donne | une clé sur son propre compte : les ids du catalogue sur `https://api.weytoken.com/v1` |
+| 🌐 Forme de l'API | Compatible OpenAI : `POST https://api.weytoken.com/v1/chat/completions` |
 | 🔒 Vos données | seuls `api.weytoken.com` et votre backend de boîte de réception sont contactés |
 
 ## 🐞 Problèmes

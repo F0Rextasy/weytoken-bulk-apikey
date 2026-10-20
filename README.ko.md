@@ -34,7 +34,7 @@
 
 ## ✨ 이 도구가 존재하는 이유
 
-WeyToken (微元算力)은 가입 양식에 **캡차가 없는** (`turnstile_check: false`) New API 패널입니다 — 이메일 + 6자리 코드가 전부이며, 새 계정은 약 **150만 할당량 단위**와 함께 시작합니다 (첫 호출 후 측정된 잔액: 1,499,887; `quota_per_unit` 500,000). 가격표에는 제로 비율 미디어 모델(`doubao-seedream-*`, `gpt-image-2-count`)을 포함한 **63개 행**이 있으며, GitHub OAuth가 대안으로 제공되고, 채팅으로 검증된 기본 모델은 `deepseek-v4.1-flash`입니다.
+WeyToken (微元算力)은 가입 양식에 **캡차가 없는** (`turnstile_check: false`) New API 패널입니다 — 이메일 + 6자리 코드만 있으면 통과되며, 새 계정에는 약 **150만 할당량 단위**가 들어옵니다 (첫 호출 후 측정된 잔액: 1,499,887; `quota_per_unit` 500,000). 가격표에는 비율이 0인 미디어 모델(`doubao-seedream-*`, `gpt-image-2-count`)을 포함해 **63개 행**이 있으며, GitHub OAuth가 대안 경로로 제공되고, 채팅으로 검증된 기본 모델은 `deepseek-v4.1-flash`입니다.
 
 ## 🎁 무료 티어 — 얼마나 받을 수 있나
 
@@ -42,10 +42,10 @@ WeyToken (微元算力)은 가입 양식에 **캡차가 없는** (`turnstile_che
 | --- | --- |
 | 시작 할당량 | **약 1,500,000 단위** 측정됨 (첫 채팅 직후 `quotaEnd`; `quota_per_unit` 500,000) |
 | 가입 | 이메일 + 6자리 코드 — **캡차 없음** (`turnstile_check: false`) |
-| 대안 | GitHub OAuth (`github_oauth: true`) |
-| 카탈로그 | **63개 가격 행**; 제로 비율: `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
+| 대안 경로 | GitHub OAuth (`github_oauth: true`) |
+| 카탈로그 | **63개 가격 행**; 비율 0: `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
 | v4.1 라인 | `deepseek-v4.1-flash` 비율 0.85, 그룹 `default` |
-| 메일 레일 | Mailtrap 인바운드 주소가 레인에서 작동함; 브로커 박스도 통과 |
+| 메일 경로 | Mailtrap 인바운드 주소가 이 경로에서 작동함; 브로커 박스도 통과 |
 
 > 💡 무료 티어는 WeyToken이 설정하며 변경될 수 있습니다. 실시간 수치는 [api.weytoken.com](https://api.weytoken.com)에서 확인하세요 — 그리고 도구 자체의 게이트가 판단하게 하세요:
 
@@ -59,9 +59,9 @@ node src/cli.js --verify-only     # every key in keys.txt is re-tested with a re
 
 | 모델 ID | 비고 |
 | --- | --- |
-| `deepseek-v4.1-flash` | `default`에서 실제 콘텐츠와 함께 **200**; 소규모 호출당 할당량 변화량 약 113 |
+| `deepseek-v4.1-flash` | `default`에서 실제 콘텐츠와 함께 **200**; 작은 호출당 할당량 변화량 약 113 |
 
-제로 비율 미디어 행 (비율 0에서 무료, 이미지/비디오): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
+비율 0 미디어 행 (비율 0에서 무료, 이미지/비디오): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
 
 ```bash
 curl https://api.weytoken.com/v1/chat/completions \
@@ -89,21 +89,21 @@ node src/launcher.js
 # or: node src/cli.js --count 30
 ```
 
-`keys.txt`는 실제 채팅 완료 후에만 기록됩니다; `accounts.json`은 사용자 이름 / 이메일 / 키 ID를 보관합니다.
+`keys.txt`는 실제 채팅 완료 후에만 기록됩니다; `accounts.json`은 사용자 이름 / 이메일 / 키 id를 보관합니다.
 
 ### 🖱️ 런처
 
-런처는 프록시 목록과 개수를 묻고, 이를 기억한 뒤 CLI를 실행합니다 — 발급, 검증, 출구 스크리닝, 설정, 도움말, 9Router 연결.
+런처는 프록시 목록과 개수를 묻고, 이를 기억한 뒤 CLI를 실행합니다 — 발급, 검증, 종료, 설정, 도움말, 9Router 연결.
 
 ## ✅ 검증됨 — 모든 키가 테스트됩니다
 
 | 확인 | 결과 |
 | --- | --- |
-| `GET /api/status` | **200** — 가입 활성화, 이메일 인증 활성화, **캡차 비활성화** |
+| `GET /api/status` | **200** — 가입 켜짐, 이메일 인증 켜짐, **캡차 꺼짐** |
 | `GET /api/verification?email=…` | **200** `{"message":"","success":true}` |
 | 가입 + 로그인 | **200** — 세션 확보 |
 | `POST /api/token/` (+ 공개) | **200** — 키가 한 번 기록됨 |
-| `POST /v1/chat/completions` (`deepseek-v4.1-flash`) — **모든** 키가 기록되기 전에 | 실제 콘텐츠와 함께 **200**; 첫 호출 후 할당량 1,499,887 |
+| `POST /v1/chat/completions` (`deepseek-v4.1-flash`) — 기록되기 전 **모든** 키에 대해 | 실제 콘텐츠와 함께 **200**; 첫 호출 후 할당량 1,499,887 |
 | 채팅 확인에 실패한 키 | 기록되지 않음 — 계정은 `accounts.json`에 남음 |
 
 ```bash
@@ -124,12 +124,12 @@ inbox (one address per account)                                  a fresh address
 
 | 단계 | 호출 | 비고 |
 | --- | --- | --- |
-| 상태 | `GET /api/status` | 게이트: 가입 활성화, 이메일 인증 활성화, 캡차 **비활성화** |
-| 코드 전송 | `GET /api/verification?email=…` | 받은편지함에서 6자리 코드 |
+| 상태 | `GET /api/status` | 게이트: 가입 켜짐, 이메일 인증 켜짐, 캡차 **꺼짐** |
+| 코드 전송 | `GET /api/verification?email=…` | 받은편지함에서 온 6자리 코드 |
 | 가입 | `POST /api/user/register` | 이메일 + 코드 + 비밀번호 |
 | 로그인 | `POST /api/user/login` | 세션 토큰 |
 | 키 | `POST /api/token/` (+ 공개) | 한 번 디스크에 기록됨 |
-| 증명 | `POST /v1/chat/completions` | 콘텐츠와 함께 채팅-200 = 키가 활성 상태 |
+| 증명 | `POST /v1/chat/completions` | 콘텐츠와 함께 채팅 200 = 키가 살아 있음 |
 
 ## ⚙️ CLI 옵션
 
@@ -143,20 +143,24 @@ node src/cli.js --help
 
 | 환경 변수 | 기본값 | 의미 |
 | --- | --- | --- |
-| `WEYTOKEN_PROXIES` | `proxies.txt` | 출구 풀, 프록시당 한 줄 |
+| `WEYTOKEN_PROXIES` | `proxies.txt` | 종료 풀, 프록시당 한 줄 |
 | `WEYTOKEN_MODEL` | `deepseek-v4.1-flash` | 실시간 검증에 사용할 모델 |
 
 ## 🛰️ 프록시 뒤에서
 
-**필수 — 직접 연결 폴백 없음.** 모든 요청은 출구를 통해 나갑니다; 레인에서 지친 무료 출구(15줄 풀, `TIMEOUT status after 90s`)에서 `/api/status`가 타임아웃되는 것이 측정되었으므로, 대규모 실행 전에 `--screen`을 사용하세요.
+**선택 사항 — 대규모에서는 권장됨 (IP당 제한, 차단).** 이 도구는 프록시 없이도 작동합니다.
+
+- **풀 사용 시:** `--pool <file>`을 전달하거나 (또는 `WEYTOKEN_PROXIES` 설정) 모든 요청이 해당 목록의 종료 지점을 통해 나갑니다 — 죽은 회선은 해당 시도를 실패시키고 도구는 다음으로 넘어갑니다 (풀이 제공되면 fail-closed; 풀은 사용 시점에 다시 검사됨).
+- **풀 없이:** CLI는 `running WITHOUT a proxy (direct)`를 출력하고 직접 연결합니다. 가입, 체크인, 키 발급 또는 검증에 대해 달라지는 것은 없습니다 — 패킷이 나가는 위치만 다릅니다.
+- 어느 모드에서든 `--screen`을 실행하세요: 실제 실행 전에 보유한 종료 지점 (또는 직접 경로)을 제공자에 대해 테스트합니다.
 
 ## 📄 파일
 
 | 경로 | 내용 |
 | --- | --- |
-| `keys.txt` | 한 줄에 하나의 실시간 검증된 키 — git 무시됨 |
-| `accounts.json` | 사용자 이름 / 이메일 / 키 ID |
-| `proxies.txt` | 출구 — git 무시됨 |
+| `keys.txt` | 실시간 검증된 키가 한 줄에 하나씩 — git 무시됨 |
+| `accounts.json` | 사용자 이름 / 이메일 / 키 id |
+| `proxies.txt` | 종료 지점 — git 무시됨 |
 | `outputs/` | 실행 로그 — git 무시됨 |
 
 ## 🔌 9Router에 연결
@@ -175,13 +179,13 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 | --- | --- |
 | 🏢 제공자 | **WeyToken (微元算力)** — [api.weytoken.com](https://api.weytoken.com) |
 | 🎁 제공자가 주는 것 | 약 150만 시작 할당량, 캡차 없는 가입, 63행 카탈로그 |
-| 🔑 키 하나로 얻는 것 | 자체 계정의 키 하나: `https://api.weytoken.com/v1`의 카탈로그 ID |
+| 🔑 키 하나로 얻는 것 | 자체 계정의 키 하나: `https://api.weytoken.com/v1`의 카탈로그 id |
 | 🌐 API 형태 | OpenAI 호환: `POST https://api.weytoken.com/v1/chat/completions` |
-| 🔒 데이터 | `api.weytoken.com`과 받은편지함 백엔드만 접속됨 |
+| 🔒 데이터 | `api.weytoken.com`과 받은편지함 백엔드만 접촉됨 |
 
 ## 🐞 이슈
 
-WeyToken이 가입 형태나 할당량 단계를 변경하면, 도구는 그 지점에서 멈추고 알려줍니다. 명령과 정확한 출력을 포함하여 **[이슈를 열어주세요](../../issues)**.
+WeyToken이 가입 형태나 할당량 단계를 변경하면, 도구는 그 지점에서 멈추고 그렇게 알립니다. 명령과 정확한 출력을 포함해 **[이슈를 열어주세요](../../issues)**.
 
 ## 📄 라이선스
 

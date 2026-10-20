@@ -34,7 +34,7 @@
 
 ## ✨ Por que isto existe
 
-WeyToken (微元算力) é um painel New API cujo formulário de registro é **livre de captcha** (`turnstile_check: false`) — e-mail + código de 6 caracteres é todo o portão, e a conta nova chega com aproximadamente **1,5M de unidades de cota** (saldo medido após a primeira chamada: 1.499.887; `quota_per_unit` 500.000). A tabela de preços traz **63 linhas**, incluindo modelos de mídia com proporção zero (`doubao-seedream-*`, `gpt-image-2-count`), o GitHub OAuth é oferecido como porta alternativa, e o padrão verificado por chat é `deepseek-v4.1-flash`.
+WeyToken (微元算力) é um painel New API cujo formulário de registro é **livre de captcha** (`turnstile_check: false`) — e-mail + código de 6 caracteres é todo o portão, e a conta nova chega com aproximadamente **1,5M de unidades de cota** (saldo medido após a primeira chamada: 1.499.887; `quota_per_unit` 500.000). A tabela de preços contém **63 linhas**, incluindo modelos de mídia com proporção zero (`doubao-seedream-*`, `gpt-image-2-count`), o GitHub OAuth é oferecido como porta alternativa, e o padrão verificado por chat é `deepseek-v4.1-flash`.
 
 ## 🎁 Nível gratuito — quanto você recebe
 
@@ -45,7 +45,7 @@ WeyToken (微元算力) é um painel New API cujo formulário de registro é **l
 | Porta alternativa | GitHub OAuth (`github_oauth: true`) |
 | Catálogo | **63 linhas de preços**; proporção zero: `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count` |
 | Linha v4.1 | `deepseek-v4.1-flash` proporção 0.85, grupo `default` |
-| Trilho de e-mail | Endereços de entrada Mailtrap funcionaram na pista; caixas de corretor também passam |
+| Trilho de e-mail | Endereços de entrada Mailtrap funcionaram na via; caixas de corretor também passam |
 
 > 💡 O nível gratuito é definido pela WeyToken e pode mudar. Confira os números ao vivo em [api.weytoken.com](https://api.weytoken.com) — e deixe o próprio portão da ferramenta decidir:
 
@@ -55,13 +55,13 @@ node src/cli.js --verify-only     # every key in keys.txt is re-tested with a re
 
 ## 🤖 Modelos — todos os 63
 
-A tabela de preços traz **63 linhas**. O padrão verificado por chat:
+A tabela de preços contém **63 linhas**. O padrão verificado por chat:
 
-| ID do modelo | Observação |
+| ID do modelo | Nota |
 | --- | --- |
 | `deepseek-v4.1-flash` | **200** com conteúdo real em `default`; delta de cota ~113 por chamada pequena |
 
-Linhas de mídia com proporção zero (grátis na proporção 0, imagem/vídeo): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
+Linhas de mídia com proporção zero (gratuitas na proporção 0, imagem/vídeo): `doubao-seedream-5-0-pro-260628`, `doubao-seedream-5-0-260128`, `gpt-image-2-count`.
 
 ```bash
 curl https://api.weytoken.com/v1/chat/completions \
@@ -93,7 +93,7 @@ node src/launcher.js
 
 ### 🖱️ O launcher
 
-O launcher pede a lista de proxies e a contagem, lembra delas e executa a CLI — criar, verificar, testar saídas, configurações, ajuda, Conectar ao 9Router.
+O launcher pede a lista de proxies e a quantidade, lembra delas e executa a CLI — criar, verificar, testar saídas, configurações, ajuda, Conectar ao 9Router.
 
 ## ✅ Verificado funcionando — toda chave é testada
 
@@ -122,7 +122,7 @@ inbox (one address per account)                                  a fresh address
    └─▶ live proof: POST https://api.weytoken.com/v1/chat/completions → real content = the key is live
 ```
 
-| Etapa | Chamada | Observações |
+| Etapa | Chamada | Notas |
 | --- | --- | --- |
 | status | `GET /api/status` | portões: registro ativo, verificação por e-mail ativa, captcha **desativado** |
 | enviar código | `GET /api/verification?email=…` | código de 6 caracteres da caixa de entrada |
@@ -143,12 +143,16 @@ node src/cli.js --help
 
 | Env | Padrão | Significado |
 | --- | --- | --- |
-| `WEYTOKEN_PROXIES` | `proxies.txt` | pool de saídas, uma linha por proxy |
+| `WEYTOKEN_PROXIES` | `proxies.txt` | pool de saída, uma linha por proxy |
 | `WEYTOKEN_MODEL` | `deepseek-v4.1-flash` | modelo para a verificação ao vivo |
 
 ## 🛰️ Atrás de um proxy
 
-**Obrigatório — sem fallback de conexão direta.** Toda requisição sai por uma saída; a pista mediu `/api/status` expirando em saídas gratuitas cansadas (pool de 15 linhas, `TIMEOUT status after 90s`), então use `--screen` antes de uma execução grande.
+**Opcional — recomendado em escala (limites por IP, banimentos).** A ferramenta funciona sem proxy também.
+
+- **Com um pool:** passe `--pool <file>` (ou defina `WEYTOKEN_PROXIES`) e toda requisição passa por uma saída dessa lista — uma linha morta falha naquela tentativa e a ferramenta passa para a próxima (fail-closed enquanto um pool é fornecido; o pool é re-testado no uso).
+- **Sem um pool:** a CLI imprime `running WITHOUT a proxy (direct)` e conecta diretamente. Nada sobre registro, check-in, criação de chaves ou verificação muda — apenas de onde os pacotes saem.
+- Execute `--screen` em qualquer um dos modos: ele testa as saídas que você tem (ou a rota direta) contra o provedor antes de uma execução real.
 
 ## 📄 Arquivos
 
@@ -169,19 +173,19 @@ node src/connect-9router.js --base http://localhost:20128 --password 123456
 
 Padrões: `--prefix weytoken`, `--base-url https://api.weytoken.com/v1`, `--model deepseek-v4.1-flash`. Os modelos são servidos como `weytoken/<model id>`.
 
-## 🔑 O que uma chave oferece
+## 🔑 O que uma chave te dá
 
 | | |
 | --- | --- |
 | 🏢 Provedor | **WeyToken (微元算力)** — [api.weytoken.com](https://api.weytoken.com) |
-| 🎁 O que o provedor oferece | ~1,5M de cota inicial, registro sem captcha, catálogo de 63 linhas |
-| 🔑 O que uma chave oferece | uma chave em sua própria conta: os ids do catálogo em `https://api.weytoken.com/v1` |
+| 🎁 O que o provedor dá | ~1,5M de cota inicial, registro sem captcha, catálogo de 63 linhas |
+| 🔑 O que uma chave te dá | uma chave em sua própria conta: os ids do catálogo em `https://api.weytoken.com/v1` |
 | 🌐 Formato da API | Compatível com OpenAI: `POST https://api.weytoken.com/v1/chat/completions` |
 | 🔒 Seus dados | apenas `api.weytoken.com` e seu backend de caixa de entrada são contatados |
 
 ## 🐞 Problemas
 
-Se a WeyToken mudar o formato de registro ou sua etapa de cota, a ferramenta para ali e avisa. **[Abra uma issue](../../issues)** com o comando e a saída exata.
+Se a WeyToken mudar o formato de registro ou seu passo de cota, a ferramenta para ali e avisa. **[Abra uma issue](../../issues)** com o comando e a saída exata.
 
 ## 📄 Licença
 
