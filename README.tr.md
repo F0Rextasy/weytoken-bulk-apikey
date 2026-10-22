@@ -86,6 +86,7 @@ print(c.chat.completions.create(model="deepseek-v4.1-flash",
 cd weytoken-bulk-apikey
 printf 'socks5://127.0.0.1:1080\n' > proxies.txt
 node src/launcher.js
+
 # or: node src/cli.js --count 30
 ```
 
