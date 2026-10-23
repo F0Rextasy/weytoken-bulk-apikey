@@ -52,6 +52,19 @@ const KEYS_FILE = path.join(ROOT, 'keys.txt');
 const ACCOUNTS_FILE = path.join(ROOT, 'accounts.json');
 const OUT_DIR = path.join(ROOT, 'out');
 
+/** Dead-key report: only definite rejections — 429/5xx/transport never land here. */
+const DEAD_FILE = path.join(ROOT, 'keys-dead.txt');
+const DEAD_STATUS = new Set([401, 403]);
+const DEAD_REASON = /banned|deactivated|disabled|suspended|quota|insufficient|forbidden|unauthorized/i;
+function recordDead(key, status, sample) {
+  if (!key) return;
+  if (!DEAD_STATUS.has(Number(status)) && !DEAD_REASON.test(String(sample || ''))) return;
+  const why = `${status}${sample ? ' ' + String(sample).replace(/\s+/g, ' ').slice(0, 60) : ''}`;
+  try {
+    fs.appendFileSync(DEAD_FILE, `${key}\t${why}\t${new Date().toISOString()}\n`);
+  } catch (e) { /* diagnostics must never break the run */ }
+}
+
 const BASE = 'https://api.weytoken.com';
 const EMAILNATOR = 'https://www.emailnator.com';
 const UA =
@@ -408,6 +421,7 @@ async function mint() {
             if (!rec.key) { lastErr = new Error('no key material in the token response'); continue; }
             const g = await chatGate(exit, rec.key);
             if (!g.ok) {
+              recordDead(rec.key, g.status, g.sample);
               lastErr = new Error(`chat gate ${g.status}: ${g.sample}`);
               accounts.push({ at: new Date().toISOString(), username: rec.username, email: rec.box.plain, exit: exit ? `${exit.host}:${exit.port}` : 'direct', gate: g.status });
               saveAccounts(accounts);
@@ -440,6 +454,7 @@ async function verifyOnly() {
     try {
       const g = await chatGate(exit, keys[i]);
       if (g.ok) live++;
+      else recordDead(keys[i], g.status, g.sample);
       console.log(`  ${g.ok ? '✔' : '✘'} ${keys[i].slice(0, 8)}… chat=${g.status}`);
     } catch (e) {
       console.log(`  ✘ ${keys[i].slice(0, 8)}… ${String(e.message).slice(0, 90)}`);
