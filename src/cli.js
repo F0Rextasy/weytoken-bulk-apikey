@@ -30,6 +30,7 @@
  *   --pool <file>    proxy list, one exit per line (env WEYTOKEN_PROXIES) [optional]
  *   --exits N        exits tried per account before giving up           [6]
  *   --timeout MS     per-request timeout                             [60000]
+ *   --auto           headless-friendly alias (launcher passes it; no prompts ever)   
  *   --verify-only    re-run every key in keys.txt through the chat gate
  *   --screen         only test the proxy list against WeyToken
  *   --help
@@ -111,6 +112,7 @@ const EXITS = Math.max(1, parseInt(arg('exits', '6'), 10) || 6);
 const TIMEOUT_MS = Math.max(5000, parseInt(arg('timeout', '60000'), 10) || 60000);
 const MODEL = arg('model', 'deepseek-v4.1-flash');
 const GROUP = arg('group', 'default');
+const AUTO = has('auto');
 const VERIFY_ONLY = has('verify-only');
 const SCREEN = has('screen');
 if (arg('brand')) BRAND = new RegExp(arg('brand'), 'i'); // --brand overrides the mail fence
