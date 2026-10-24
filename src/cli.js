@@ -9,13 +9,12 @@
  * 6-char code is the whole gate, and a fresh account lands with ~1.5M quota units.
  *
  * Flow, per account, every panel request through one pinned exit from your pool:
- *   1. mailbox    Emailnator `POST /api/generate-email` → a fresh @gmail.com
- *                 (registered in the dot-free plain form)
+ *   1. mailbox    temp.tf `POST /api/account` → a private outlook/hotmail alias
  *   2. status     `GET /api/status` → gates (register on, e-mail verification on)
  *   3. send code  `GET /api/verification?email=…` → panel mails the 6-char code
- *   4. code       poll Emailnator (`/api/message-list` → `/api/message/<id>`)
+ *   4. code       poll temp.tf (`/api/check`) — only the panel's own mail (BRAND)
  *   5. register   `POST /api/user/register` {username,password,email,code}
- *   6. login      `POST /api/user/login` → access_token
+ *   6. login      `POST /api/user/login` → `session` cookie + `New-Api-User: <id>`
  *   7. key        `POST /api/token/` (+ reveal `POST /api/token/<id>/key`)
  *   8. gate       `POST /v1/chat/completions` → 200 with real content = keep
  *
@@ -29,7 +28,7 @@
  *   --model <id>     model used for the live gate       [deepseek-v4.1-flash]
  *   --group <name>   token group the key is created in             [default]
  *   --pool <file>    proxy list, one exit per line (env WEYTOKEN_PROXIES) [optional]
- *   --tries N        exits tried per account before giving up           [2]
+ *   --exits N        exits tried per account before giving up           [6]
  *   --timeout MS     per-request timeout                             [60000]
  *   --verify-only    re-run every key in keys.txt through the chat gate
  *   --screen         only test the proxy list against WeyToken
@@ -66,9 +65,13 @@ function recordDead(key, status, sample) {
 }
 
 const BASE = 'https://api.weytoken.com';
-const EMAILNATOR = 'https://www.emailnator.com';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36';
+
+// Shared/disposable boxes carry other tenants' mail: only a message that names
+// this panel may supply the code (measured 2026-10-24: dddai read a stranger's
+// code from a shared box). Override: --brand / WEYTOKEN_BRAND_RE.
+let BRAND = new RegExp(process.env.WEYTOKEN_BRAND_RE || 'weytoken|微元算力', 'i');
 
 // ------------------------------------------------------------------- options
 const argv = process.argv.slice(2);
@@ -94,6 +97,7 @@ if (has('help') || has('h')) {
   --model <id>   model used for the live gate         [deepseek-v4.1-flash]
   --group <name> token group the key is created in                   [default]
   --pool <file>  proxy list, one exit per line (env WEYTOKEN_PROXIES) [optional]
+  --brand RE     sender/subject fence for the code mail (env WEYTOKEN_BRAND_RE)
 
 Requests go through the exits in your proxy list when one is provided (--pool
 or the WEYTOKEN_PROXIES env). Without a pool the tool connects DIRECTLY.`);
@@ -103,12 +107,13 @@ or the WEYTOKEN_PROXIES env). Without a pool the tool connects DIRECTLY.`);
 const COUNT = Math.max(1, parseInt(arg('count', '5'), 10) || 5);
 const CONC = Math.min(8, Math.max(1, parseInt(arg('conc', '1'), 10) || 1));
 const GAP_MS = Math.max(0, parseInt(arg('gap', '1200'), 10) || 0);
-const TRIES = Math.max(1, parseInt(arg('tries', '2'), 10) || 2);
+const EXITS = Math.max(1, parseInt(arg('exits', '6'), 10) || 6);
 const TIMEOUT_MS = Math.max(5000, parseInt(arg('timeout', '60000'), 10) || 60000);
 const MODEL = arg('model', 'deepseek-v4.1-flash');
 const GROUP = arg('group', 'default');
 const VERIFY_ONLY = has('verify-only');
 const SCREEN = has('screen');
+if (arg('brand')) BRAND = new RegExp(arg('brand'), 'i'); // --brand overrides the mail fence
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -250,7 +255,7 @@ async function exitJson(proxy, url, opts = {}) {
   const r = await exitFetch(proxy, url, { ...opts, headers });
   let json = null;
   try { json = JSON.parse(r.body); } catch { /* not json */ }
-  return { status: r.status, json, text: r.body };
+  return { status: r.status, json, text: r.body, setCookie: r.headers['set-cookie'] || [] };
 }
 
 // ------------------------------------------------------------------- pool
@@ -270,6 +275,15 @@ function loadExits() {
   }
   return exits;
 }
+/** A dead exit, not a panel verdict — the flow rotates to the next candidate. */
+const isExitError = (e) =>
+  /proxy connect failed|proxy CONNECT refused|proxy timeout|connect timeout|connect failed|ETIMEDOUT|ECONNREFUSED|ECONNRESET|ECONNABORTED|EPIPE|ENETUNREACH|EHOSTUNREACH|EAI_AGAIN|socket hang up|secureConnect|TLS|handshake/i.test(
+    String((e && e.message) || e),
+  );
+
+/** `host:port` of the exit in play, or `direct` when the pool is empty. */
+const exitLabel = (e) => (e ? `${e.host}:${e.port}` : 'direct');
+
 
 async function screen(exits) {
   let ok = 0;
@@ -289,33 +303,33 @@ async function screen(exits) {
 }
 
 // ------------------------------------------------------------------- mail
+// The emailnator boxes are public/shared history: they carry other tenants' mail and
+// the panel sometimes refuses the address outright ("邮箱地址已被占用"), so mint the
+// box on temp.tf instead — a private mailbox per account (delivers in ~25 s).
+const TEMPTF = 'https://temp.tf';
 async function newMailbox(exit) {
-  const r = await exitJson(exit, `${EMAILNATOR}/api/generate-email`, {
-    method: 'POST',
-    body: { ids: [3] },
-    headers: { origin: EMAILNATOR, referer: `${EMAILNATOR}/` },
-  });
-  const dotted = r.json && r.json.email;
-  if (!dotted || !/@gmail\.com$/i.test(dotted)) throw new Error(`emailnator generate ${r.status}: ${String(r.text).slice(0, 120)}`);
-  const [local, domain] = dotted.split('@');
-  return { rail: 'emailnator', dotted, plain: `${local.replace(/\./g, '')}@${domain}` };
+  const q = new URLSearchParams({ providers: 'outlook,hotmail', dot: '0', plus: '1' }).toString();
+  const r = await exitJson(exit, `${TEMPTF}/api/account?${q}`, { timeoutMs: 30000 });
+  const address = String((r.json && r.json.email) || '').trim();
+  if (!/@/.test(address)) throw new Error(`temp.tf: no address (${r.status} ${String(r.text).slice(0, 120)})`);
+  return { rail: 'temp.tf', dotted: address, plain: address };
 }
 
 async function pollCode(exit, box, { timeoutMs = 180000, pollMs = 5000 } = {}) {
-  const seen = new Set();
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     let msgs = [];
     try {
-      const r = await exitJson(exit, `${EMAILNATOR}/api/message-list`, { method: 'POST', body: { email: box.plain, limit: 20 } });
-      msgs = (r.json && r.json.messages) || [];
+      const r = await exitJson(exit, `${TEMPTF}/api/check`, { method: 'POST', body: { email: box.plain, wait: false }, timeoutMs: 30000 });
+      msgs = Array.isArray(r.json) ? r.json : (r.json && (r.json.data || r.json.messages)) || [];
     } catch (e) { /* retry */ }
     for (const m of msgs) {
-      if (seen.has(m.id)) continue;
-      seen.add(m.id);
-      const r = await exitJson(exit, `${EMAILNATOR}/api/message/${encodeURIComponent(m.id)}`).catch(() => null);
-      const text = r ? r.body : '';
-      const code = (text.match(/(?:code|verification|验证码|kodu)[^\d]{0,24}(\d{4,8})/i) || text.match(/\b(\d{6})\b/));
+      if (!BRAND.test(`${m.from || ''} ${m.subject || ''}`)) continue; // the panel's own mail only
+      const blob = [m.subject, m.html, m.htmlBody, m.text, m.body, m.plain, m.snippet].filter(Boolean).map(String).join(' ');
+      const flat = blob.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ');
+      // WeyToken mails a 6-char alphanumeric token ("微元算力邮箱验证码：e87531"); the old
+      // \d-only patterns matched a 5-digit fragment and register answered 验证码错误或已过期.
+      const code = flat.match(/验证码[\s\S]{0,40}?\b([A-Za-z0-9]{6})\b/) || flat.match(/(?:code|verification)[^\d]{0,24}([A-Za-z0-9]{6})/i);
       if (code) return { code: code[1], subject: m.subject || '' };
     }
     await sleep(pollMs);
@@ -347,11 +361,15 @@ async function signUp(exit) {
   });
   if (!(reg.json && reg.json.success)) throw new Error(`register HTTP ${reg.status}: ${String(reg.text).slice(0, 140)}`);
   const lg = await exitJson(exit, `${BASE}/api/user/login`, { method: 'POST', body: { username, password } });
-  const token = lg.json && lg.json.data && lg.json.data.access_token;
-  if (!token) throw new Error(`login HTTP ${lg.status}: ${String(lg.text).slice(0, 140)}`);
-  const me = await exitJson(exit, `${BASE}/api/user/self`, { headers: { authorization: `Bearer ${token}` } });
+  const loginData = (lg.json && lg.json.data) || {};
+  const accessToken = loginData.access_token;
+  // The panel answers 200 with `access_token: null`: auth is the `session` cookie
+  // plus `New-Api-User: <login data.id>` on every user-scoped call (verified 2026-10-24).
+  const cookie = (lg.setCookie || []).map((c) => String(c).split(';')[0]).join('; ');
+  if (!accessToken && !(cookie && loginData.id)) throw new Error(`login HTTP ${lg.status}: ${String(lg.text).slice(0, 300)}`);
+  const auth = accessToken ? { authorization: `Bearer ${accessToken}` } : { cookie, 'New-Api-User': String(loginData.id) };
+  const me = await exitJson(exit, `${BASE}/api/user/self`, { headers: auth });
   const data = (me.json && me.json.data) || {};
-  const auth = { authorization: `Bearer ${token}` };
   if (data.id) auth['New-Api-User'] = String(data.id);
   const created = await exitJson(exit, `${BASE}/api/token/`, {
     method: 'POST',
@@ -406,16 +424,20 @@ async function mint() {
   const exits = loadExits();
   if (SCREEN) return void (await screen(exits));
   const accounts = loadAccounts();
-  log(`weytoken · ${COUNT} key(s) · conc ${CONC} · exits ${exits.filter(Boolean).length || 'direct'} · keys land in keys.txt`);
+  const routes = exits[0] === null ? 1 : EXITS;
+  log(`weytoken · ${COUNT} key(s) · conc ${CONC} · exits ${exits.filter(Boolean).length || 'direct'} · up to ${routes} per account · keys land in keys.txt`);
   let made = 0;
+  let transportDead = 0;
   for (let round = 0; round < COUNT; round += CONC) {
     const jobs = [];
     for (let k = 0; k < CONC && round + k < COUNT; k++) {
       const i = round + k;
       jobs.push((async () => {
         let lastErr = null;
-        for (let t2 = 0; t2 < TRIES; t2++) {
-          const exit = exits[(i + t2) % exits.length];
+        let lastWasExit = false;
+        for (let a = 0; a < routes; a++) {
+          const exit = exits[(i + a) % exits.length];
+          lastWasExit = false;
           try {
             const rec = await signUp(exit);
             if (!rec.key) { lastErr = new Error('no key material in the token response'); continue; }
@@ -433,13 +455,26 @@ async function mint() {
             made++;
             log(`account ${i + 1} ✔ chat-200 ${MODEL} · quota ${rec.quota} · ${rec.key.slice(0, 8)}…`);
             return;
-          } catch (e) { lastErr = e; }
+          } catch (e) {
+            lastErr = e;
+            lastWasExit = isExitError(e);
+            if (lastWasExit) {
+              const where = exit ? `exit ${a + 1}/${routes} ${exitLabel(exit)}` : `direct attempt ${a + 1}/${routes}`;
+              log(`account ${i + 1}: ${where} dead (${String(e.message).slice(0, 70)})${exit ? ' → next exit' : ''}`);
+            }
+          }
         }
+        if (lastWasExit) transportDead++;
         log(`account ${i + 1}: ${lastErr ? String(lastErr.message).slice(0, 140) : 'failed'}`);
       })());
     }
     await Promise.all(jobs);
     if (GAP_MS) await sleep(GAP_MS);
+  }
+  if (!made && transportDead === COUNT) {
+    const route = exits[0] === null ? 'direct mode (no proxy list)' : `${exits.length}-exit pool`;
+    console.error(`[fatal] no usable route — ${COUNT} account(s) × ${routes} candidate(s) over ${route}: every attempt died at the transport layer.`);
+    process.exit(1);
   }
   log(`done — ${made}/${COUNT} key(s) written to ${KEYS_FILE}`);
 }
